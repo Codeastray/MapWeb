@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/leaflet.css">
+  <link rel="stylesheet" href="css/all.min.css">
+  <link rel="stylesheet" href="css/allmystyle.css">
+  <link rel="stylesheet" href="css/MarkerCluster.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" type="text/css" href="https://csshake.surge.sh/csshake.min.css">
+  <link rel="stylesheet" href="css/magic.min.css">
+
+  <title>全國運動場館地圖</title>
+  <style>
+    .content {
+      box-shadow: 1px 1px 1px 1px #ccc;
+      margin-top: 15px;
+      border-radius: 5px;
+      border-style: outset;
+    }
+
+    .banner {
+      box-shadow: 1px 1px 1px 1px #ccc;
+      border-radius: 5px;
+      border-style: ridge;
+
+    }
+
+    #mylist {
+      overflow: scroll;
+      height: 84vh
+    }
+
+    .marker-cluster-small {
+      background-color: rgba(236, 226, 233, 0);
+    }
+
+    .marker-cluster-small div {
+      background-color: rgba(103, 77, 144, 0.7);
+    }
+
+    .marker-cluster-medium {
+      background-color: rgba(81, 164, 9, 0);
+    }
+
+    .marker-cluster-medium div {
+      background-color: rgba(126, 23, 173, 0.7);
+    }
+
+    .marker-cluster div {
+      width: 30px;
+      height: 30px;
+      border-radius: 30%;
+      color: rgb(255, 255, 255);
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 5px;
+      margin-left: 5px;
+    }
+
+    .marker-cluster span {
+      line-height: 30px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container  shake-constant shake-constant--hover" style="position:relative">
+    <div class="row banner bg-cover" style="background-image: url(/MapWeb/images/sports.png);height:230px;"
+      id="banner">
+    </div>
+   
+    <div class="row">
+      <div class="col-md-3 content mb-2 ">
+        <select class="custom-select custom-select-lg my-3" id="myCity01">
+          <option selected disabled>----縣市----</option>
+          <option value="台中市">台中市</option>
+          <option value="南投市">南投市</option>
+          <option value="彰化縣">彰化縣</option>
+        </select>
+
+        <select class="custom-select custom-select-lg mb-3" id="myCity02">
+          <option selected disabled>----鄉鎮區----</option>
+          <option value="西屯區">西屯區</option>
+          <option value="南屯區">南屯區</option>
+          <option value="太平區">太平區</option>
+        </select>
+        <ul class="list-group " id="mylist">
+          <!-- <li class="list-group-item">
+            <h4>XXX藥局</h4>
+            <h5>地址: XXXXXX</h5>
+            <h5>電話: XXXXXXXX</h5>
+            <h5>成人口罩<span class="h3 font-weight-bolder text-danger"></span></h5>
+            <h5>兒童口罩<span class="h3 font-weight-bolder text-warning"></span></h5>
+          </li> -->
+        </ul>
+      </div>
+      <div class="col-md-9 content pt-3 pb-3 mb-2">
+        <div id="map" style="height:100vh;"></div>
+      </div>
+      <!-- wow animate__zoomInDown" data-wow-duration="1s -->
+      <section class="" id="intro" hidden style="position:absolute; z-index: 1000; left: 10px; ">
+        <img src="/MapWeb/images/intro.png" alt=""  style="width: 100%;">
+      </section>
+    </div>
+  </div>
+
+  <!-- Optional JavaScript; choose one of the two! -->
+
+  <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+    crossorigin="anonymous"></script>
+  <script src="js/City.js"></script>
+  <script src="js/gym.js"></script>
+  <script src="js/leaflet.js"></script>
+  <script src="js/leaflet.markercluster.js"></script>
+  <script src="js/wow.min.js"></script>
+  <script>
+$(window).on('load', function () {
+  $('#intro').removeAttr('hidden');
+});
+    $(function () {
+      
+      setTimeout(function () {
+        $('#banner').addClass('magictime vanishIn');
+      }, 90);
+      setTimeout(function () {
+        $('#intro').addClass('magictime twisterInUp'); 
+      }, 0);
+    
+      setTimeout(function () {
+       
+        $('#intro').removeClass( "magictime twisterInUp" ).addClass( "magictime holeOut" );
+      }, 2000);
+     
+      wow = new WOW(
+        {
+          boxClass: 'wow',      // default
+          animateClass: 'animated', // default
+          offset: 0,          // default
+          mobile: true,       // default
+          live: true        // default
+        }
+      )
+      wow.init();
+    });
+  </script>
+  <script>
+    var mydata = []; //儲存健保局資料
+    var selectCity; //儲存選取的縣市名稱
+    var selectTown //儲存選取的鄉鎮區名稱
+    var selectCounty = []; //儲存選取縣市的鄉鎮區名稱
+    var map;
+    var greenIcon = new L.Icon({
+      iconUrl: 'img/runman.png',
+      shadowUrl: 'img/marker-shadow.png',
+      iconSize: [29, 70],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [53, 83]
+    });
+
+    $(function () {
+
+      console.log(city);
+
+      //產生地圖
+      map = L.map('map').setView([24.1705382, 120.6079343], 16);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      //marker cluster
+      var markers = new L.markerClusterGroup().addTo(map);
+
+
+
+      //載入健保局藥局資料
+      $.ajax({
+        type: "GET",
+        url: "js/points.json",
+        dataType: "json",
+        success: function (data) {
+          mydata = data.features
+          console.log(mydata);
+        },
+        error: function () {
+          alert("error-js/points.json");
+        }
+      });
+
+      //渲染縣市名稱選單
+      $("#myCity01").empty();
+      $("#myCity01").append('<option selected disabled>----縣市----</option>');
+      city.forEach(function (item) {
+        console.log(item.CityName);
+        var strHTML = '<option value="' + item.CityName + '">' + item.CityName + '</option>';
+        $("#myCity01").append(strHTML);
+      });
+
+      //監聽縣市選單是否有被選取
+      $("#myCity01").change(function () {
+
+        //紀錄縣市名稱
+        selectCity = $(this).val();
+        console.log(selectCity);
+
+        //撈取該縣市名稱的鄉鎮區資料
+        city.find(function (item) {
+          if (item.CityName == selectCity) {
+            selectCounty = item.AreaList;
+          }
+        });
+        console.log(selectCounty);
+        //渲染鄉鎮區名稱
+        $("#myCity02").empty();
+        $("#myCity02").append('<option selected disabled>----鄉鎮區----</option>');
+        selectCounty.forEach(function (item) {
+          var strHTML = '<option value="' + item.AreaName + '">' + item.AreaName + '</option>';
+          $("#myCity02").append(strHTML);
+        });
+      });
+
+      //監聽鄉鎮區選單是否有被選取
+      $("#myCity02").change(function () {
+        selectTown = $(this).val();
+        console.log(selectTown);
+        console.log(gym)
+        console.log(gym[0].gymAddr.substring(0, 3))
+        console.log(gym[0].gymAddr.substring(3, 6))
+
+        //依照所選取的縣市與鄉鎮區名稱, 對健保局藥局資料撈取
+        var listData = []; //儲存撈取過濾後的藥局資料
+        gym.forEach(function (item) {
+          if (item.gymAddr.substring(0, 3) == selectCity && item.gymAddr.substring(3, 6) == selectTown) {
+            listData.push(item);
+          }
+        });
+        console.log(listData);
+
+        $("#mylist").empty();
+        removeMarker();
+        listData.forEach(function (item, key) {
+          console.log(key);
+
+          var lat = item.gymLat; //經度
+          var lng = item.gymLng; //經度
+
+          //產生list-group
+          var strHTML = '<li class="list-group-item" data-name="' + item.gymName + '" data-addr="' + item.gymAddr + '" data-tel="' + item.gymTel + '" data-faci="' + item.gymFaci + '" data-type="' + item.gymType + '" data-lat="' + lat + '" data-lng="' + lng + '"><div class="card border-success mb-3" style="max-width: 18rem;"><div class="card-header bg-transparent font-weight-bolder border-success h6">設施項目:<span class="text-primary">' + item.gymType + '</span></div><div class="card-body text-secondary"><h3 class="card-title font-weight-bolder">' + item.gymName + '</h3><p>地址: ' + item.gymAddr + '</p><p class="card-text">電話:' + item.gymTel + '</p></div><div class="card-footer bg-transparent font-weight-bolder border-success h6">所含設施:<span class="text-primary">' + item.gymFaci + '</span></div></div></li>';
+          $("#mylist").append(strHTML);
+
+          //產生地圖座標圖式(小水滴)
+          var markerHTML = '<div class="card border-success mb-3" style="max-width: 18rem;"><div class="card-header bg-transparent font-weight-bolder border-success h6">設施項目:<span class="text-primary">' + item.gymType + '</span></div><div class="card-body text-secondary"><h3 class="card-title font-weight-bolder">' + item.gymName + '</h3><p>地址: ' + item.gymAddr + '</p><p class="card-text">電話:' + item.gymTel + '</p></div><div class="card-footer bg-transparent font-weight-bolder border-success h6">所含設施:<span class="text-primary">' + item.gymFaci + '</span></div></div>';
+          // L.marker([lat, lng]).addTo(map).bindPopup(markerHTML);
+
+          markers.addLayer(L.marker([lat, lng], { icon: greenIcon }).bindPopup(markerHTML));
+
+          //移動到藥局排序中心點
+          if (listData.length == 1) {
+            map.panTo([lat, lng]);
+          } else if (listData.length != 1 && key == Math.round(listData.length / 2)) {
+            map.panTo([lat, lng]);
+          }
+        });
+
+        //監聽#mylist .list-group-item click事件
+        $("#mylist .list-group-item").click(function () {
+
+          console.log($(this).data("name"));
+          console.log($(this).data("addr"));
+          console.log($(this).data("tel"));
+          console.log($(this).data("type"));
+          console.log($(this).data("faci"));
+          console.log($(this).data("lat"));
+          console.log($(this).data("lng"));
+
+          markerPopup($(this).data("name"), $(this).data("addr"), $(this).data("tel"), $(this).data("faci"), $(this).data("type"), $(this).data("lat"), $(this).data("lng"));
+        });
+
+      });
+    });
+
+    function removeMarker() {
+      map.eachLayer(function (layer) {
+        if (layer instanceof L.Marker) {
+          map.removeLayer(layer);
+        }
+      });
+    }
+
+
+    function markerPopup(name, addr, tel, type, faci, lat, lng) {
+
+      console.log("markerPopup:" + name);
+      console.log("markerPopup:" + addr);
+      console.log("markerPopup:" + tel);
+      console.log("markerPopup:" + type);
+      console.log("markerPopup:" + faci);
+      console.log("markerPopup:" + lat);
+      console.log("markerPopup:" + lng);
+      //產生地圖座標圖式(小水滴)
+      var markerHTML = '<div class="card border-success mb-3" style="max-width: 18rem;"><div class="card-header bg-transparent font-weight-bolder border-success h6">設施項目:<span class="text-primary">' + type + '</span></div><div class="card-body text-secondary"><h3 class="card-title font-weight-bolder">' + name + '</h3><p>地址: ' + addr + '</p><p class="card-text">電話:' + tel + '</p></div><div class="card-footer bg-transparent font-weight-bolder border-success h6">所含設施:<span class="text-primary">' + faci + '</span></div></div>';
+      var add_marker = L.marker([lat, lng], { icon: greenIcon }).addTo(map).bindPopup(markerHTML).openPopup();
+      map.on('zoomend', function () {
+        add_marker.remove();
+      });
+    }
+
+  </script>
+</body>
+
+</html>
+
+<!-- <div class="card">
+  <div class="card-body">
+    <h5 class="card-title">XXX藥局</h5>
+    <p class="card-text h5">地址: XXXXXX</p>
+    <p class="card-text h5">電話: XXXXXXXX</p>
+    <h5>成人口罩<span class="h3 font-weight-bolder text-danger">50</span>個</h5>
+    <h5>兒童口罩<span class="h3 font-weight-bolder text-warning">50</span>個</h5>
+  </div>
+</div>
+
+<li class="list-group-item">
+  <h4>XXX藥局</h4>
+  <h5>地址: XXXXXX</h5>
+  <h5>電話: XXXXXXXX</h5>
+  <h5>成人口罩<span class="h3 font-weight-bolder text-danger">50</span>個</h5>
+  <h5>兒童口罩<span class="h3 font-weight-bolder text-warning">50</span>個</h5>
+</li> -->
